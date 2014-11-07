@@ -29,9 +29,9 @@ RUN \
   curl -s -o /src/grafana-1.8.1.tar.gz http://grafanarel.s3.amazonaws.com/grafana-1.8.1.tar.gz && \
   curl -s -o /src/influxdb_latest_amd64.deb http://s3.amazonaws.com/influxdb/influxdb_latest_amd64.deb && \
   tar xzvf grafana-1.8.1.tar.gz --strip-components=1 && \
-  dpkg -i influxdb_latest_amd64.deb && \
-  rm grafana-1.7.0.tar.gz  && \
-  rm influxdb_latest_amd64.deb
+  dpkg -i influxdb_latest_amd64.deb
+#  rm grafana-1.7.0.tar.gz && \
+#  rm influxdb_latest_amd64.deb \
 
 # Configuration
 
