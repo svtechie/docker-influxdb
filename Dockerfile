@@ -51,7 +51,8 @@ ADD supervisord.conf /etc/supervisor/conf.d/
 
 EXPOSE 80 8083 8086
 
-CMD ["supervisord", "-n"]
+# CMD ["supervisord", "-n"]
+CMD ["/bin/bash"]
 
 
 #  echo "influxdb soft nofile unlimited" >> /etc/security/limits.conf && \
