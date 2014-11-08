@@ -41,7 +41,7 @@ ADD nginx.conf /etc/nginx/nginx.conf
 ADD supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 ADD run.sh /opt/run.sh
 
-VOLUME["/opt/influxdb/shared/data/db"]
+VOLUME ["/opt/influxdb/shared/data/db"]
 
 EXPOSE 80 8083 8086
 
