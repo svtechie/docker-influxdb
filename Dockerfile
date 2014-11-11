@@ -1,10 +1,8 @@
 FROM ubuntu
 MAINTAINER Matt Baldwin (baldwin@stackpointcloud.com)
 
-ENV PRE_CREATE_DB **None**
-
 RUN \
-  apt-get update && apt-get install -y \
+  apt-get update && apt-get -y --no-install-recommends install \
     ca-certificates \
     software-properties-common \
     python-django-tagging \
@@ -37,11 +35,10 @@ RUN \
   echo "influxdb hard nofile unlimited" >> /etc/security/limits.conf
 
 ADD config.js /opt/grafana/config.js
-ADD nginx.conf /etc/nginx/nginx.conf
+ADD grafana.conf /etc/nginx/conf.d/grafana.conf
 ADD supervisord.conf /etc/supervisor/conf.d/supervisord.conf
-ADD run.sh /opt/run.sh
 
-VOLUME ["/opt/influxdb/shared/data/db"]
+VOLUME ["/opt/influxdb/shared/data"]
 
 EXPOSE 80 8083 8086
 
