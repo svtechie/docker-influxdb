@@ -35,7 +35,7 @@ RUN \
   echo "influxdb hard nofile unlimited" >> /etc/security/limits.conf
 
 ADD config.js /opt/grafana/config.js
-ADD grafana.conf /etc/nginx/conf.d/grafana.conf
+ADD nginx.conf /etc/nginx/nginx.conf
 ADD supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 
 VOLUME ["/opt/influxdb/shared/data"]
