@@ -21,9 +21,7 @@ RUN \
     curl \
     openjdk-7-jre \
     build-essential \
-    python-dev \
-    make \
-    golang
+    python-dev
 
 
 WORKDIR /opt
@@ -34,17 +32,14 @@ RUN \
   tar -xzvf grafana-1.8.1.tar.gz --directory /opt/grafana --strip-components=1 && \
   dpkg -i influxdb_latest_amd64.deb && \
   echo "influxdb soft nofile unlimited" >> /etc/security/limits.conf && \
-  echo "influxdb hard nofile unlimited" >> /etc/security/limits.conf && \
-  git clone https://github.com/hoonmin/influxdb-collectd-proxy.git && \
-  make -C influxdb-collectd-proxy/
+  echo "influxdb hard nofile unlimited" >> /etc/security/limits.conf
 
 ADD config.js /opt/grafana/config.js
 ADD nginx.conf /etc/nginx/nginx.conf
 ADD supervisord.conf /etc/supervisor/conf.d/supervisord.conf
-ADD types.db /opt/influxdb-collectd-proxy/types.db
 
 VOLUME ["/opt/influxdb/shared/data"]
 
-EXPOSE 80 8083 8086 8096
+EXPOSE 80 8083 8086
 
 CMD ["supervisord", "-n"]
