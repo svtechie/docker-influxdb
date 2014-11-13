@@ -32,7 +32,7 @@ RUN \
   tar -xzvf grafana-1.8.1.tar.gz --directory /opt/grafana --strip-components=1 && \
   dpkg -i influxdb_latest_amd64.deb && \
   echo "influxdb soft nofile unlimited" >> /etc/security/limits.conf && \
-  echo "influxdb hard nofile unlimited" >> /etc/security/limits.conf && \
+  echo "influxdb hard nofile unlimited" >> /etc/security/limits.conf
 
 ADD config.js /opt/grafana/config.js
 ADD nginx.conf /etc/nginx/nginx.conf
