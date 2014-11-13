@@ -16,7 +16,7 @@ read-timeout = "5s"
   [input_plugins.collectd]
   enabled = true
   # address = "0.0.0.0" # If not set, is actually set to bind-address.
-  port = 25826
+  port = 8096
   database = "exampledb"
   typesdb = "/opt/influxdb/current/types.db"
 
