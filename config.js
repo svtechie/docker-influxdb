@@ -21,13 +21,13 @@ define(['settings'], function(Settings) {
       datasources: {
         influxdb: {
           type: 'influxdb',
-          url: "http://162.254.25.101:8086/db/exampledb",
+          url: "http://yourip:8086/db/exampledb",
           username: 'root',
           password: 'root',
         },
         grafana: {
           type: 'influxdb',
-          url: "http://162.254.25.101:8086/db/grafana",
+          url: "http://yourip:8086/db/grafana",
           username: 'root',
           password: 'root',
           grafanaDB: true

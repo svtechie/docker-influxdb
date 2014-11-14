@@ -14,7 +14,7 @@
 
 ## Introduction
 
-What I love about containers is how fast you can get up and running using a Dockerfile to automate the build of your image. This tutorial will walk you through how to create a Dockerfile that can be used to build a container which makes use of *supervisord* to run Nginx for Grafana and InfluxDB for the database backed. By the end you should have a working container you can feed data into using InfluxDB's REST API. 
+What I love about containers is how fast you can get up and running using a Dockerfile to automate the build of your image. This tutorial will walk you through the process of creating a Dockerfile that will utilize *supervisord* to run a combined install of InfluxDB and nginx for Grafana. At the end of this tutorial, you should have a container configured to accept server metrics information from *collectd*. 
 
 ## What is InfluxDB? 
 
@@ -26,7 +26,7 @@ Grafana is a metrics dashboard which plugs into solutions such as Graphite, Infl
 
 ## The Dockerfile
 
-You can either create a folder and place your Dockerfile and all configuration files in it or you can clone these files from our repository [here](https://github.com/StackPointCloud/docker-influxdb). We recommending cloning so you capture all required configuration files, plus a pre-built Dockerfile. 
+You can either create a folder and place your Dockerfile and all configuration files in it or you can clone these files from our repository [here](https://github.com/StackPointCloud/docker-influxdb). We recommend cloning so you capture all required configuration files, plus a pre-built Dockerfile. If you spot an issue or have an improvement, feel free to issue a PR, too!
 
 The first lines of your Dockerfile should always be: 
 
@@ -59,7 +59,7 @@ Next, you'll want to prepare the environment with all requisite software. We do 
         build-essential \
         python-dev
 
-Our next RUN block will install Grafana and InfluxDB and do some basic configuration:
+Our next RUN block will install Grafana, InfluxDB, and do some basic configuration:
 
     WORKDIR /opt
     RUN \
@@ -78,12 +78,14 @@ Now we need to copy over the configuration files we've staged:
     ADD config.js /opt/grafana/config.js
     ADD nginx.conf /etc/nginx/nginx.conf
     ADD supervisord.conf /etc/supervisor/conf.d/supervisord.conf
+    ADD types.db /opt/influxdb/current/types.db
+    ADD config.toml /opt/influxdb/current/config.toml
 
 Finally, we map volumes, expose ports, and setup the run command: 
 
     VOLUME ["/opt/influxdb/shared/data"]
 
-    EXPOSE 80 8083 8086
+    EXPOSE 80 8083 8086 8096
 
     CMD ["supervisord", "-n"]
 
@@ -128,10 +130,12 @@ Putting it all together you should have a file similar to this:
     ADD config.js /opt/grafana/config.js
     ADD nginx.conf /etc/nginx/nginx.conf
     ADD supervisord.conf /etc/supervisor/conf.d/supervisord.conf
+    ADD types.db /opt/influxdb/current/types.db
+    ADD config.toml /opt/influxdb/current/config.toml
 
     VOLUME ["/opt/influxdb/shared/data"]
 
-    EXPOSE 80 8083 8086
+    EXPOSE 80 8083 8086 8096
 
     CMD ["supervisord", "-n"]
 
@@ -144,19 +148,25 @@ We are using the following configuration files:
 | Grafana | config.js |
 | Supervisor | supervisord.conf | 
 | Nginx | grafana.conf | 
+| InfluxDB | config.toml |
+| InfluxDB | types.db |
 
-If you cloned the repo then you should have these files. The important one that needs to be altered is Grafana's *config.js*. You will need to update the HTTP endpoints to be an IP you can reach from the location where you will be using Grafana. 
+If you cloned the repo then you should have these files; however, note, that some of the files must be edited with your IP address, desired database name, etc. 
+
+### Grafana Config
+
+The important one that needs to be altered is Grafana's *config.js*. You will need to update the HTTP endpoints to be an IP you can reach from the location where you will be using Grafana. 
 
       datasources: {
         influxdb: {
           type: 'influxdb',
-          url: "http://$yourpublicIP:8086/db/exampledb",
+          url: "http://yourpublicIP:8086/db/exampledb",
           username: 'root',
           password: 'root',
         },
         grafana: {
           type: 'influxdb',
-          url: "http://$yourpublicIP:8086/db/grafana",
+          url: "http://yourpublicIP:8086/db/grafana",
           username: 'root',
           password: 'root',
           grafanaDB: true
@@ -166,6 +176,19 @@ If you cloned the repo then you should have these files. The important one that 
 In our demo we are connecting to the Grafana via the public Internet. 
 
 Grafana is configured to use InfluxDB for its configurtion. While you can use the same db for both it is not recommended. 
+
+### InfluxDB Config
+
+We have enabled *collectdb* in InfluxDB's *config.toml* by doing this: 
+
+    [input_plugins]
+      [input_plugins.collectd]
+      enabled = true
+      port = 8096
+      database = "exampledb"
+      typesdb = "/opt/influxdb/current/types.db"
+
+We tell InfluxDB to start the listener on 8096/UDP, set the database for the metrics, and provide a typesdb path and file. We copy this file over when we're dong our adds in our Dockerfile. The one provided in the repo was pulled from *collectdb*.
 
 ## External Volumes
 
@@ -181,22 +204,25 @@ This allows us to pass the *-v* switch to *docker* to tell it to map the path in
 
 Now that you have put your Dockerfile and configuration files together it is time to build your container. You will need to ensure you're working directory has your Dockerfile and configuration files in it. To build a container from your Dockerfile you would run the following command: 
 
-    docker build -t influxdb-demo .
+    docker build -t influx .
     
-The *-t* parameter tags the image with the name *influxdb-demo*. The build will execute the Dockerfile. Inspect the output for any errors. If all looks good you should be ready to start the container up. 
+The *-t* parameter tags the image with the name *influx*. The build will execute the Dockerfile. Inspect the output for any errors. If all looks good you should be ready to start the container up. 
 
 ## Running the Container
 
 Building a container will not automatically start the container. You will need to do that next. Ensure the **/opt/influxdb** path exists on your host file system then run the following command. 
 
-    sudo docker run --name influx -d -v /opt/influxdb/:/opt/influxdb/shared/data -p 80:80 -p 8083:8083 -p 8086:8086 influx-demo
+    docker run --name influx -d -v /opt/influxdb/:/opt/influxdb/shared/data -p 80:80 -p 8083:8083 -p 8086:8086 -p 8096:8096/udp influx
 
 This tells Docker to:
 
-1. Start the *influx-demo* image;
+1. Start the *influx* image;
 2. Name it *influx*;
 3. Map the container path of */opt/influxdb/shared/data* to your local */opt/influxdb*; 
 4. Map your local port 80, 8083, and 8086 to the exposed ports in the container. 
+5. Map port 8096 to UDP. *Collectd* uses UDP to communicate the data it is collecting. 
+
+We need to explicitly instruct Docker to map 8096 to UDP so that *collectd* can communicate with the *collectdb* listener. 
 
 You can validate the container is running by issuing the command: 
 
@@ -230,4 +256,4 @@ To validate you can read data from InfluxDB you could do this:
 
 ## Next Steps
 
-At this point, you should have a single container using supervisor to run nginx for Grafana and InfluxDB as your backend data store. You can now setup and configure collectd to feed information into Influx. We will cover this in a different tutorial. 
+At this point, you should have a single container using supervisor to run nginx for Grafana and InfluxDB as your backend data store. You can now setup and configure collectd to feed information into Influx. We will cover this in a different tutorial. We encourage you to play with this setup in your Data Center. 
