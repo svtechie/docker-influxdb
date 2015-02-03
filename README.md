@@ -63,10 +63,11 @@ Our next RUN block will install Grafana, InfluxDB, and do some basic configurati
 
     WORKDIR /opt
     RUN \
-      curl -s -o /opt/grafana-1.8.1.tar.gz http://grafanarel.s3.amazonaws.com/grafana-1.8.1.tar.gz && \
-      curl -s -o /opt/influxdb_latest_amd64.deb http://s3.amazonaws.com/influxdb/influxdb_latest_amd64.deb && \
-      mkdir /opt/grafana && \
-      tar -xzvf grafana-1.8.1.tar.gz --directory /opt/grafana --strip-components=1 && \
+      grafana_url=$(curl http://grafanarel.s3.amazonaws.com/latest.json | python -c 'import sys, json; print json.load(sys.stdin)["url"]') && \
+      curl -s -o grafana.tar.gz $grafana_url && \
+      curl -s -o influxdb_latest_amd64.deb http://s3.amazonaws.com/influxdb/influxdb_latest_amd64.deb && \
+      mkdir grafana && \
+      tar -xzf grafana.tar.gz --directory grafana --strip-components=1 && \
       dpkg -i influxdb_latest_amd64.deb && \
       echo "influxdb soft nofile unlimited" >> /etc/security/limits.conf && \
       echo "influxdb hard nofile unlimited" >> /etc/security/limits.conf
@@ -119,10 +120,11 @@ Putting it all together you should have a file similar to this:
 
     WORKDIR /opt
     RUN \
-      curl -s -o /opt/grafana-1.8.1.tar.gz http://grafanarel.s3.amazonaws.com/grafana-1.8.1.tar.gz && \
-      curl -s -o /opt/influxdb_latest_amd64.deb http://s3.amazonaws.com/influxdb/influxdb_latest_amd64.deb && \
-      mkdir /opt/grafana && \
-      tar -xzvf grafana-1.8.1.tar.gz --directory /opt/grafana --strip-components=1 && \
+      grafana_url=$(curl http://grafanarel.s3.amazonaws.com/latest.json | python -c 'import sys, json; print json.load(sys.stdin)["url"]') && \
+      curl -s -o grafana.tar.gz $grafana_url && \
+      curl -s -o influxdb_latest_amd64.deb http://s3.amazonaws.com/influxdb/influxdb_latest_amd64.deb && \
+      mkdir grafana && \
+      tar -xzf grafana.tar.gz --directory grafana --strip-components=1 && \
       dpkg -i influxdb_latest_amd64.deb && \
       echo "influxdb soft nofile unlimited" >> /etc/security/limits.conf && \
       echo "influxdb hard nofile unlimited" >> /etc/security/limits.conf
