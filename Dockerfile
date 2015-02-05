@@ -43,6 +43,6 @@ ADD config.toml /opt/influxdb/current/config.toml
 
 VOLUME ["/opt/influxdb/shared/data"]
 
-EXPOSE 80 8083 8086 8096
+EXPOSE 80 8083 8086 2003
 
 CMD ["supervisord", "-n"]
