@@ -38,7 +38,6 @@ RUN \
 ADD config.js /opt/grafana/config.js
 ADD nginx.conf /etc/nginx/nginx.conf
 ADD supervisord.conf /etc/supervisor/conf.d/supervisord.conf
-ADD types.db /opt/influxdb/current/types.db
 ADD config.toml /opt/influxdb/current/config.toml
 
 VOLUME ["/opt/influxdb/shared/data"]
