@@ -214,7 +214,7 @@ The *-t* parameter tags the image with the name *influx*. The build will execute
 
 Building a container will not automatically start the container. You will need to do that next. Ensure the **/opt/influxdb** path exists on your host file system then run the following command. 
 
-    docker run --name influx -d -v /opt/influxdb/:/opt/influxdb/shared/data -p 80:80 -p 8083:8083 -p 8086:8086 -p 8096:8096/udp influx
+    docker run --name="influx" --hostname="influx" -d -v /opt/influxdb/:/opt/influxdb/shared/data -p 80:80 -p 8083:8083 -p 8086:8086 -p 8096:8096/udp influx
 
 This tells Docker to:
 
