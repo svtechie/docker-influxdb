@@ -79,14 +79,13 @@ Now we need to copy over the configuration files we've staged:
     ADD config.js /opt/grafana/config.js
     ADD nginx.conf /etc/nginx/nginx.conf
     ADD supervisord.conf /etc/supervisor/conf.d/supervisord.conf
-    ADD types.db /opt/influxdb/current/types.db
     ADD config.toml /opt/influxdb/current/config.toml
 
 Finally, we map volumes, expose ports, and setup the run command: 
 
     VOLUME ["/opt/influxdb/shared/data"]
 
-    EXPOSE 80 8083 8086 8096
+    EXPOSE 80 8083 8086 2003
 
     CMD ["supervisord", "-n"]
 
@@ -132,12 +131,11 @@ Putting it all together you should have a file similar to this:
     ADD config.js /opt/grafana/config.js
     ADD nginx.conf /etc/nginx/nginx.conf
     ADD supervisord.conf /etc/supervisor/conf.d/supervisord.conf
-    ADD types.db /opt/influxdb/current/types.db
     ADD config.toml /opt/influxdb/current/config.toml
 
     VOLUME ["/opt/influxdb/shared/data"]
 
-    EXPOSE 80 8083 8086 8096
+    EXPOSE 80 8083 8086 2003
 
     CMD ["supervisord", "-n"]
 
@@ -151,7 +149,6 @@ We are using the following configuration files:
 | Supervisor | supervisord.conf | 
 | Nginx | grafana.conf | 
 | InfluxDB | config.toml |
-| InfluxDB | types.db |
 
 If you cloned the repo then you should have these files; however, note, that some of the files must be edited with your IP address, desired database name, etc. 
 
@@ -181,16 +178,16 @@ Grafana is configured to use InfluxDB for its configurtion. While you can use th
 
 ### InfluxDB Config
 
-We have enabled *collectdb* in InfluxDB's *config.toml* by doing this: 
+We have enabled *graphite* in InfluxDB's *config.toml* by doing this: 
 
     [input_plugins]
-      [input_plugins.collectd]
+      [input_plugins.graphite]
       enabled = true
-      port = 8096
+      port = 2003
+      udp_enabled = true
       database = "exampledb"
-      typesdb = "/opt/influxdb/current/types.db"
 
-We tell InfluxDB to start the listener on 8096/UDP, set the database for the metrics, and provide a typesdb path and file. We copy this file over when we're dong our adds in our Dockerfile. The one provided in the repo was pulled from *collectdb*.
+We tell InfluxDB to start the listener on 2003/UDP and set the database for the metrics.
 
 ## External Volumes
 
@@ -214,7 +211,7 @@ The *-t* parameter tags the image with the name *influx*. The build will execute
 
 Building a container will not automatically start the container. You will need to do that next. Ensure the **/opt/influxdb** path exists on your host file system then run the following command. 
 
-    docker run --name influx -d -v /opt/influxdb/:/opt/influxdb/shared/data -p 80:80 -p 8083:8083 -p 8086:8086 -p 8096:8096/udp influx
+    docker run --name="influx" --hostname="influx" -d -v /opt/influxdb/:/opt/influxdb/shared/data -p 80:80 -p 8083:8083 -p 8086:8086 -p 2003:2003/udp influx
 
 This tells Docker to:
 
@@ -222,9 +219,9 @@ This tells Docker to:
 2. Name it *influx*;
 3. Map the container path of */opt/influxdb/shared/data* to your local */opt/influxdb*; 
 4. Map your local port 80, 8083, and 8086 to the exposed ports in the container. 
-5. Map port 8096 to UDP. *Collectd* uses UDP to communicate the data it is collecting. 
+5. Map port 2003 to UDP. *Collectd* will use UDP to communicate the data it is collecting. 
 
-We need to explicitly instruct Docker to map 8096 to UDP so that *collectd* can communicate with the *collectdb* listener. 
+We need to explicitly instruct Docker to map 2003 to UDP so that *collectd* can communicate with the *graphite* listener. 
 
 You can validate the container is running by issuing the command: 
 
