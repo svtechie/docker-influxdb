@@ -26,8 +26,7 @@ RUN \
 
 WORKDIR /opt
 RUN \
-  grafana_url=$(curl http://grafanarel.s3.amazonaws.com/latest.json | python -c 'import sys, json; print json.load(sys.stdin)["url"]') && \
-  curl -s -o grafana.tar.gz $grafana_url && \
+  curl -s -o grafana.tar.gz "https://grafanarel.s3.amazonaws.com/builds/grafana-latest.linux-x64.tar.gz" && \
   curl -s -o influxdb_latest_amd64.deb http://s3.amazonaws.com/influxdb/influxdb_latest_amd64.deb && \
   mkdir grafana && \
   tar -xzf grafana.tar.gz --directory grafana --strip-components=1 && \
