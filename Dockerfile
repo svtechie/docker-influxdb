@@ -26,10 +26,10 @@ RUN \
 
 WORKDIR /opt
 RUN \
-  curl -s -o grafana.tar.gz "https://grafanarel.s3.amazonaws.com/builds/grafana_2.5.0_amd64.deb" && \
+  curl -s -o grafana.deb "https://grafanarel.s3.amazonaws.com/builds/grafana_2.5.0_amd64.deb" && \
   curl -s -o influxdb_amd64.deb https://s3.amazonaws.com/influxdb/influxdb_0.9.6.1_amd64.deb && \
   mkdir grafana && \
-  tar -xzf grafana.tar.gz --directory grafana --strip-components=1 && \
+  dpkg -i grafana.deb && \
   dpkg -i influxdb_amd64.deb && \
   echo "influxdb soft nofile unlimited" >> /etc/security/limits.conf && \
   echo "influxdb hard nofile unlimited" >> /etc/security/limits.conf
@@ -38,8 +38,6 @@ ADD config.js /opt/grafana/config.js
 ADD nginx.conf /etc/nginx/nginx.conf
 ADD supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 ADD config.toml /opt/influxdb/current/config.toml
-
-VOLUME ["/opt/influxdb/shared/data"]
 
 EXPOSE 80 8083 8086 2003
 
