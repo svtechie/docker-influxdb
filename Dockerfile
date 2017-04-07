@@ -11,7 +11,6 @@ RUN \
     python-ldap \
     python-cairo \
     python-pysqlite2 \
-    python-support \
     python-pip \
     gunicorn \
     supervisor \
@@ -19,18 +18,21 @@ RUN \
     nodejs \
     git \
     curl \
-    openjdk-7-jre \
+    wget \
+    default-jre \
     build-essential \
     python-dev
 
 
 WORKDIR /opt
 RUN \
-  curl -s -o grafana.deb "https://grafanarel.s3.amazonaws.com/builds/grafana_2.5.0_amd64.deb" && \
-  curl -s -o influxdb_amd64.deb https://s3.amazonaws.com/influxdb/influxdb_0.9.6.1_amd64.deb && \
-  mkdir grafana && \
-  dpkg -i grafana.deb && \
-  dpkg -i influxdb_amd64.deb && \
+  curl -s -o grafana.tar.gz "https://grafanarel.s3.amazonaws.com/builds/grafana-latest.linux-x64.tar.gz" && \
+  wget https://dl.influxdata.com/influxdb/releases/influxdb_1.2.2_amd64.deb && \
+  wget http://launchpadlibrarian.net/109052632/python-support_1.0.15_all.deb && \
+  dpkg -i python-support_1.0.15_all.deb && \
+  mkdir /opt/grafana && \
+  tar -xzf grafana.tar.gz --directory /opt/grafana --strip-components=1 && \
+  dpkg -i influxdb_1.2.2_amd64.deb && \
   echo "influxdb soft nofile unlimited" >> /etc/security/limits.conf && \
   echo "influxdb hard nofile unlimited" >> /etc/security/limits.conf
 
@@ -39,6 +41,8 @@ ADD nginx.conf /etc/nginx/nginx.conf
 ADD supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 ADD config.toml /opt/influxdb/current/config.toml
 
-EXPOSE 80 8083 8086 2003
+VOLUME ["/opt/influxdb/shared/data"]
+
+EXPOSE 80 8083 8086 2003 3000
 
 CMD ["supervisord", "-n"]
